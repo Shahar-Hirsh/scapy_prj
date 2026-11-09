@@ -1,16 +1,42 @@
 from scapy.all import *
 
-def build_msg(msg):
+conf.iface = "Npcap Loopback Adapter"
+
+def MyFilter(p):
     """
-    builds the message
-    :param msg: the message to send
-    :return:
+    filters the message
+    :param p: packet
+    :return: if it is http
+    :rtype: bool
     """
+    return IP in p and p[IP].dst == '169.254.176.55' and UDP in p and p[UDP].dport == 888
 
-while True:
-    msg = input("enter a 5 letters word and exit! to stop: ")
+def MyPrint(p):
+    """
+    prints the message
+    :param p: packet
+    :return: none
+    """
+    global stop_sniffing
 
-    if len(msg) == 5:
+    data = p[Raw].load.decode()
+    print(data)
 
-    else:
-        continue
+    if data.lower() == 'exit!':
+        stop_sniffing = True
+
+
+def MyStopFilter(p):
+    """
+    Checks if the sniffing should stop
+    :param p: packet
+    :return: True if sniffing should stop
+    :rtype: bool
+    """
+    global stop_sniffing
+    return stop_sniffing
+
+stop_sniffing = False
+p = sniff(iface="Npcap Loopback Adapter", lfilter=MyFilter, prn=MyPrint,stop_filter=MyStopFilter)
+
+print("bye bye")
